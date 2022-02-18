@@ -1,0 +1,67 @@
+<div class="row justify-content-center">
+  <div class="col-8">
+    <div *ngIf="products">
+      <h2 data-cy="productsDetailsHeading"><span jhiTranslate="demoSpringBootstrapApp.products.detail.title">Products</span></h2>
+
+      <hr />
+
+      <jhi-alert-error></jhi-alert-error>
+
+      <jhi-alert></jhi-alert>
+
+      <dl class="row-md jh-entity-details">
+        <dt><span jhiTranslate="global.field.id">ID</span></dt>
+        <dd>
+          <span>{{ products.id }}</span>
+        </dd>
+        <dt><span jhiTranslate="demoSpringBootstrapApp.products.name">Name</span></dt>
+        <dd>
+          <span>{{ products.name }}</span>
+        </dd>
+        <dt><span jhiTranslate="demoSpringBootstrapApp.products.price">Price</span></dt>
+        <dd>
+          <span>{{ products.price }}</span>
+        </dd>
+        <dt><span jhiTranslate="demoSpringBootstrapApp.products.quantity">Quantity</span></dt>
+        <dd>
+          <span>{{ products.quantity }}</span>
+        </dd>
+        <dt><span jhiTranslate="demoSpringBootstrapApp.products.imageURL">Image URL</span></dt>
+        <dd>
+          <div *ngIf="products.imageURL">
+            <a (click)="openFile(products.imageURL, products.imageURLContentType)">
+              <img
+                [src]="'data:' + products.imageURLContentType + ';base64,' + products.imageURL"
+                style="max-width: 100%"
+                alt="products image"
+              />
+            </a>
+            {{ products.imageURLContentType }}, {{ byteSize(products.imageURL) }}
+          </div>
+        </dd>
+        <dt><span jhiTranslate="demoSpringBootstrapApp.products.createdDate">Created Date</span></dt>
+        <dd>
+          <span>{{ products.createdDate | formatMediumDatetime }}</span>
+        </dd>
+        <dt><span jhiTranslate="demoSpringBootstrapApp.products.updatedDate">Updated Date</span></dt>
+        <dd>
+          <span>{{ products.updatedDate | formatMediumDatetime }}</span>
+        </dd>
+        <dt><span jhiTranslate="demoSpringBootstrapApp.products.category">Category</span></dt>
+        <dd>
+          <div *ngIf="products.category">
+            <a [routerLink]="['/category', products.category?.id, 'view']">{{ products.category?.id }}</a>
+          </div>
+        </dd>
+      </dl>
+
+      <button type="submit" (click)="previousState()" class="btn btn-info" data-cy="entityDetailsBackButton">
+        <fa-icon icon="arrow-left"></fa-icon>&nbsp;<span jhiTranslate="entity.action.back">Back</span>
+      </button>
+
+      <button type="button" [routerLink]="['/products', products.id, 'edit']" class="btn btn-primary">
+        <fa-icon icon="pencil-alt"></fa-icon>&nbsp;<span jhiTranslate="entity.action.edit">Edit</span>
+      </button>
+    </div>
+  </div>
+</div>

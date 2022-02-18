@@ -1,0 +1,132 @@
+<div>
+  <h2 id="page-heading" data-cy="JobsHeading">
+    <span jhiTranslate="demoSpringBootstrapApp.jobs.home.title">Jobs</span>
+
+    <div class="d-flex justify-content-end">
+      <button class="btn btn-info mr-2" (click)="loadPage()" [disabled]="isLoading">
+        <fa-icon icon="sync" [spin]="isLoading"></fa-icon>
+        <span jhiTranslate="demoSpringBootstrapApp.jobs.home.refreshListLabel">Refresh List</span>
+      </button>
+
+      <button
+        id="jh-create-entity"
+        data-cy="entityCreateButton"
+        class="btn btn-primary jh-create-entity create-jobs"
+        [routerLink]="['/jobs/new']"
+      >
+        <fa-icon icon="plus"></fa-icon>
+        <span jhiTranslate="demoSpringBootstrapApp.jobs.home.createLabel"> Create a new Jobs </span>
+      </button>
+    </div>
+  </h2>
+
+  <jhi-alert-error></jhi-alert-error>
+
+  <jhi-alert></jhi-alert>
+
+  <div class="alert alert-warning" id="no-result" *ngIf="jobs?.length === 0">
+    <span jhiTranslate="demoSpringBootstrapApp.jobs.home.notFound">No jobs found</span>
+  </div>
+
+  <div class="table-responsive" id="entities" *ngIf="jobs && jobs.length > 0">
+    <table class="table table-striped" aria-describedby="page-heading">
+      <thead>
+        <tr jhiSort [(predicate)]="predicate" [(ascending)]="ascending" (sortChange)="loadPage()">
+          <th scope="col" jhiSortBy="id"><span jhiTranslate="global.field.id">ID</span> <fa-icon icon="sort"></fa-icon></th>
+          <th scope="col" jhiSortBy="title">
+            <span jhiTranslate="demoSpringBootstrapApp.jobs.title">Title</span> <fa-icon icon="sort"></fa-icon>
+          </th>
+          <th scope="col" jhiSortBy="slug">
+            <span jhiTranslate="demoSpringBootstrapApp.jobs.slug">Slug</span> <fa-icon icon="sort"></fa-icon>
+          </th>
+          <th scope="col" jhiSortBy="featureImage">
+            <span jhiTranslate="demoSpringBootstrapApp.jobs.featureImage">Feature Image</span> <fa-icon icon="sort"></fa-icon>
+          </th>
+          <th scope="col" jhiSortBy="validFrom">
+            <span jhiTranslate="demoSpringBootstrapApp.jobs.validFrom">Valid From</span> <fa-icon icon="sort"></fa-icon>
+          </th>
+          <th scope="col" jhiSortBy="validThrough">
+            <span jhiTranslate="demoSpringBootstrapApp.jobs.validThrough">Valid Through</span> <fa-icon icon="sort"></fa-icon>
+          </th>
+          <th scope="col" jhiSortBy="status">
+            <span jhiTranslate="demoSpringBootstrapApp.jobs.status">Status</span> <fa-icon icon="sort"></fa-icon>
+          </th>
+          <th scope="col" jhiSortBy="createdBy">
+            <span jhiTranslate="demoSpringBootstrapApp.jobs.createdBy">Created By</span> <fa-icon icon="sort"></fa-icon>
+          </th>
+          <th scope="col" jhiSortBy="createdDate">
+            <span jhiTranslate="demoSpringBootstrapApp.jobs.createdDate">Created Date</span> <fa-icon icon="sort"></fa-icon>
+          </th>
+          <th scope="col" jhiSortBy="updatedDate">
+            <span jhiTranslate="demoSpringBootstrapApp.jobs.updatedDate">Updated Date</span> <fa-icon icon="sort"></fa-icon>
+          </th>
+          <th scope="col" jhiSortBy="updateBy">
+            <span jhiTranslate="demoSpringBootstrapApp.jobs.updateBy">Update By</span> <fa-icon icon="sort"></fa-icon>
+          </th>
+          <th scope="col" jhiSortBy="category.id">
+            <span jhiTranslate="demoSpringBootstrapApp.jobs.category">Category</span> <fa-icon icon="sort"></fa-icon>
+          </th>
+          <th scope="col"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let jobs of jobs; trackBy: trackId" data-cy="entityTable">
+          <td>
+            <a [routerLink]="['/jobs', jobs.id, 'view']">{{ jobs.id }}</a>
+          </td>
+          <td>{{ jobs.title }}</td>
+          <td>{{ jobs.slug }}</td>
+          <td>{{ jobs.featureImage }}</td>
+          <td>{{ jobs.validFrom | formatMediumDatetime }}</td>
+          <td>{{ jobs.validThrough | formatMediumDatetime }}</td>
+          <td jhiTranslate="{{ 'demoSpringBootstrapApp.JobStatus.' + jobs.status }}">{{ jobs.status }}</td>
+          <td>{{ jobs.createdBy }}</td>
+          <td>{{ jobs.createdDate | formatMediumDatetime }}</td>
+          <td>{{ jobs.updatedDate | formatMediumDatetime }}</td>
+          <td>{{ jobs.updateBy }}</td>
+          <td>
+            <div *ngIf="jobs.category">
+              <a [routerLink]="['/category', jobs.category?.id, 'view']">{{ jobs.category?.id }}</a>
+            </div>
+          </td>
+          <td class="text-right">
+            <div class="btn-group">
+              <button type="submit" [routerLink]="['/jobs', jobs.id, 'view']" class="btn btn-info btn-sm" data-cy="entityDetailsButton">
+                <fa-icon icon="eye"></fa-icon>
+                <span class="d-none d-md-inline" jhiTranslate="entity.action.view">View</span>
+              </button>
+
+              <button type="submit" [routerLink]="['/jobs', jobs.id, 'edit']" class="btn btn-primary btn-sm" data-cy="entityEditButton">
+                <fa-icon icon="pencil-alt"></fa-icon>
+                <span class="d-none d-md-inline" jhiTranslate="entity.action.edit">Edit</span>
+              </button>
+
+              <button type="submit" (click)="delete(jobs)" class="btn btn-danger btn-sm" data-cy="entityDeleteButton">
+                <fa-icon icon="times"></fa-icon>
+                <span class="d-none d-md-inline" jhiTranslate="entity.action.delete">Delete</span>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div *ngIf="jobs && jobs.length > 0">
+    <div class="row justify-content-center">
+      <jhi-item-count [params]="{ page: page, totalItems: totalItems, itemsPerPage: itemsPerPage }"></jhi-item-count>
+    </div>
+
+    <div class="row justify-content-center">
+      <ngb-pagination
+        [collectionSize]="totalItems"
+        [(page)]="ngbPaginationPage"
+        [pageSize]="itemsPerPage"
+        [maxSize]="5"
+        [rotate]="true"
+        [boundaryLinks]="true"
+        (pageChange)="loadPage($event)"
+      ></ngb-pagination>
+    </div>
+  </div>
+</div>

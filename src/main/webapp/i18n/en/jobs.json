@@ -1,0 +1,34 @@
+{
+  "demoSpringBootstrapApp": {
+    "jobs": {
+      "home": {
+        "title": "Jobs",
+        "refreshListLabel": "Refresh list",
+        "createLabel": "Create a new Jobs",
+        "createOrEditLabel": "Create or edit a Jobs",
+        "notFound": "No Jobs found"
+      },
+      "created": "A new Jobs is created with identifier {{ param }}",
+      "updated": "A Jobs is updated with identifier {{ param }}",
+      "deleted": "A Jobs is deleted with identifier {{ param }}",
+      "delete": {
+        "question": "Are you sure you want to delete Jobs {{ id }}?"
+      },
+      "detail": {
+        "title": "Jobs"
+      },
+      "id": "ID",
+      "title": "Title",
+      "slug": "Slug",
+      "featureImage": "Feature Image",
+      "validFrom": "Valid From",
+      "validThrough": "Valid Through",
+      "status": "Status",
+      "createdBy": "Created By",
+      "createdDate": "Created Date",
+      "updatedDate": "Updated Date",
+      "updateBy": "Update By",
+      "category": "Category"
+    }
+  }
+}

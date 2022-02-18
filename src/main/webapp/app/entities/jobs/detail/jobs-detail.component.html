@@ -1,0 +1,74 @@
+<div class="row justify-content-center">
+  <div class="col-8">
+    <div *ngIf="jobs">
+      <h2 data-cy="jobsDetailsHeading"><span jhiTranslate="demoSpringBootstrapApp.jobs.detail.title">Jobs</span></h2>
+
+      <hr />
+
+      <jhi-alert-error></jhi-alert-error>
+
+      <jhi-alert></jhi-alert>
+
+      <dl class="row-md jh-entity-details">
+        <dt><span jhiTranslate="global.field.id">ID</span></dt>
+        <dd>
+          <span>{{ jobs.id }}</span>
+        </dd>
+        <dt><span jhiTranslate="demoSpringBootstrapApp.jobs.title">Title</span></dt>
+        <dd>
+          <span>{{ jobs.title }}</span>
+        </dd>
+        <dt><span jhiTranslate="demoSpringBootstrapApp.jobs.slug">Slug</span></dt>
+        <dd>
+          <span>{{ jobs.slug }}</span>
+        </dd>
+        <dt><span jhiTranslate="demoSpringBootstrapApp.jobs.featureImage">Feature Image</span></dt>
+        <dd>
+          <span>{{ jobs.featureImage }}</span>
+        </dd>
+        <dt><span jhiTranslate="demoSpringBootstrapApp.jobs.validFrom">Valid From</span></dt>
+        <dd>
+          <span>{{ jobs.validFrom | formatMediumDatetime }}</span>
+        </dd>
+        <dt><span jhiTranslate="demoSpringBootstrapApp.jobs.validThrough">Valid Through</span></dt>
+        <dd>
+          <span>{{ jobs.validThrough | formatMediumDatetime }}</span>
+        </dd>
+        <dt><span jhiTranslate="demoSpringBootstrapApp.jobs.status">Status</span></dt>
+        <dd>
+          <span jhiTranslate="{{ 'demoSpringBootstrapApp.JobStatus.' + jobs.status }}">{{ jobs.status }}</span>
+        </dd>
+        <dt><span jhiTranslate="demoSpringBootstrapApp.jobs.createdBy">Created By</span></dt>
+        <dd>
+          <span>{{ jobs.createdBy }}</span>
+        </dd>
+        <dt><span jhiTranslate="demoSpringBootstrapApp.jobs.createdDate">Created Date</span></dt>
+        <dd>
+          <span>{{ jobs.createdDate | formatMediumDatetime }}</span>
+        </dd>
+        <dt><span jhiTranslate="demoSpringBootstrapApp.jobs.updatedDate">Updated Date</span></dt>
+        <dd>
+          <span>{{ jobs.updatedDate | formatMediumDatetime }}</span>
+        </dd>
+        <dt><span jhiTranslate="demoSpringBootstrapApp.jobs.updateBy">Update By</span></dt>
+        <dd>
+          <span>{{ jobs.updateBy }}</span>
+        </dd>
+        <dt><span jhiTranslate="demoSpringBootstrapApp.jobs.category">Category</span></dt>
+        <dd>
+          <div *ngIf="jobs.category">
+            <a [routerLink]="['/category', jobs.category?.id, 'view']">{{ jobs.category?.id }}</a>
+          </div>
+        </dd>
+      </dl>
+
+      <button type="submit" (click)="previousState()" class="btn btn-info" data-cy="entityDetailsBackButton">
+        <fa-icon icon="arrow-left"></fa-icon>&nbsp;<span jhiTranslate="entity.action.back">Back</span>
+      </button>
+
+      <button type="button" [routerLink]="['/jobs', jobs.id, 'edit']" class="btn btn-primary">
+        <fa-icon icon="pencil-alt"></fa-icon>&nbsp;<span jhiTranslate="entity.action.edit">Edit</span>
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,50 @@
+{
+  "applications": "*",
+  "changelogDate": "20220218043849",
+  "dto": "mapstruct",
+  "embedded": false,
+  "entityTableName": "category",
+  "fields": [
+    {
+      "fieldName": "name",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "createdBy",
+      "fieldType": "Long"
+    },
+    {
+      "fieldName": "createdDate",
+      "fieldType": "ZonedDateTime"
+    },
+    {
+      "fieldName": "updatedDate",
+      "fieldType": "ZonedDateTime"
+    },
+    {
+      "fieldName": "updateBy",
+      "fieldType": "Long"
+    }
+  ],
+  "fluentMethods": true,
+  "jpaMetamodelFiltering": false,
+  "name": "Category",
+  "pagination": "pagination",
+  "readOnly": false,
+  "relationships": [
+    {
+      "otherEntityName": "products",
+      "otherEntityRelationshipName": "category",
+      "relationshipName": "products",
+      "relationshipType": "one-to-many"
+    },
+    {
+      "otherEntityName": "jobs",
+      "otherEntityRelationshipName": "category",
+      "relationshipName": "jobs",
+      "relationshipType": "one-to-many"
+    }
+  ],
+  "service": "serviceImpl"
+}
