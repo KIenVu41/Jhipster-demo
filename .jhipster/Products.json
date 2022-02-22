@@ -35,7 +35,7 @@
     }
   ],
   "fluentMethods": true,
-  "jpaMetamodelFiltering": false,
+  "jpaMetamodelFiltering": true,
   "name": "Products",
   "pagination": "pagination",
   "readOnly": false,

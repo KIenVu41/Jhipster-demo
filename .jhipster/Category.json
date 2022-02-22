@@ -28,7 +28,7 @@
     }
   ],
   "fluentMethods": true,
-  "jpaMetamodelFiltering": false,
+  "jpaMetamodelFiltering": true,
   "name": "Category",
   "pagination": "pagination",
   "readOnly": false,

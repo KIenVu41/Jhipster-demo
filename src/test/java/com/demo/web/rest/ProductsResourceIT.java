@@ -7,8 +7,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import com.demo.IntegrationTest;
+import com.demo.domain.Category;
 import com.demo.domain.Products;
 import com.demo.repository.ProductsRepository;
+import com.demo.service.criteria.ProductsCriteria;
 import com.demo.service.dto.ProductsDTO;
 import com.demo.service.mapper.ProductsMapper;
 import java.time.Instant;
@@ -42,9 +44,11 @@ class ProductsResourceIT {
 
     private static final Integer DEFAULT_PRICE = 1;
     private static final Integer UPDATED_PRICE = 2;
+    private static final Integer SMALLER_PRICE = 1 - 1;
 
     private static final Integer DEFAULT_QUANTITY = 1;
     private static final Integer UPDATED_QUANTITY = 2;
+    private static final Integer SMALLER_QUANTITY = 1 - 1;
 
     private static final byte[] DEFAULT_IMAGE_URL = TestUtil.createByteArray(1, "0");
     private static final byte[] UPDATED_IMAGE_URL = TestUtil.createByteArray(1, "1");
@@ -53,9 +57,11 @@ class ProductsResourceIT {
 
     private static final ZonedDateTime DEFAULT_CREATED_DATE = ZonedDateTime.ofInstant(Instant.ofEpochMilli(0L), ZoneOffset.UTC);
     private static final ZonedDateTime UPDATED_CREATED_DATE = ZonedDateTime.now(ZoneId.systemDefault()).withNano(0);
+    private static final ZonedDateTime SMALLER_CREATED_DATE = ZonedDateTime.ofInstant(Instant.ofEpochMilli(-1L), ZoneOffset.UTC);
 
     private static final ZonedDateTime DEFAULT_UPDATED_DATE = ZonedDateTime.ofInstant(Instant.ofEpochMilli(0L), ZoneOffset.UTC);
     private static final ZonedDateTime UPDATED_UPDATED_DATE = ZonedDateTime.now(ZoneId.systemDefault()).withNano(0);
+    private static final ZonedDateTime SMALLER_UPDATED_DATE = ZonedDateTime.ofInstant(Instant.ofEpochMilli(-1L), ZoneOffset.UTC);
 
     private static final String ENTITY_API_URL = "/api/products";
     private static final String ENTITY_API_URL_ID = ENTITY_API_URL + "/{id}";
@@ -254,6 +260,588 @@ class ProductsResourceIT {
             .andExpect(jsonPath("$.imageURL").value(Base64Utils.encodeToString(DEFAULT_IMAGE_URL)))
             .andExpect(jsonPath("$.createdDate").value(sameInstant(DEFAULT_CREATED_DATE)))
             .andExpect(jsonPath("$.updatedDate").value(sameInstant(DEFAULT_UPDATED_DATE)));
+    }
+
+    @Test
+    @Transactional
+    void getProductsByIdFiltering() throws Exception {
+        // Initialize the database
+        productsRepository.saveAndFlush(products);
+
+        Long id = products.getId();
+
+        defaultProductsShouldBeFound("id.equals=" + id);
+        defaultProductsShouldNotBeFound("id.notEquals=" + id);
+
+        defaultProductsShouldBeFound("id.greaterThanOrEqual=" + id);
+        defaultProductsShouldNotBeFound("id.greaterThan=" + id);
+
+        defaultProductsShouldBeFound("id.lessThanOrEqual=" + id);
+        defaultProductsShouldNotBeFound("id.lessThan=" + id);
+    }
+
+    @Test
+    @Transactional
+    void getAllProductsByNameIsEqualToSomething() throws Exception {
+        // Initialize the database
+        productsRepository.saveAndFlush(products);
+
+        // Get all the productsList where name equals to DEFAULT_NAME
+        defaultProductsShouldBeFound("name.equals=" + DEFAULT_NAME);
+
+        // Get all the productsList where name equals to UPDATED_NAME
+        defaultProductsShouldNotBeFound("name.equals=" + UPDATED_NAME);
+    }
+
+    @Test
+    @Transactional
+    void getAllProductsByNameIsNotEqualToSomething() throws Exception {
+        // Initialize the database
+        productsRepository.saveAndFlush(products);
+
+        // Get all the productsList where name not equals to DEFAULT_NAME
+        defaultProductsShouldNotBeFound("name.notEquals=" + DEFAULT_NAME);
+
+        // Get all the productsList where name not equals to UPDATED_NAME
+        defaultProductsShouldBeFound("name.notEquals=" + UPDATED_NAME);
+    }
+
+    @Test
+    @Transactional
+    void getAllProductsByNameIsInShouldWork() throws Exception {
+        // Initialize the database
+        productsRepository.saveAndFlush(products);
+
+        // Get all the productsList where name in DEFAULT_NAME or UPDATED_NAME
+        defaultProductsShouldBeFound("name.in=" + DEFAULT_NAME + "," + UPDATED_NAME);
+
+        // Get all the productsList where name equals to UPDATED_NAME
+        defaultProductsShouldNotBeFound("name.in=" + UPDATED_NAME);
+    }
+
+    @Test
+    @Transactional
+    void getAllProductsByNameIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        productsRepository.saveAndFlush(products);
+
+        // Get all the productsList where name is not null
+        defaultProductsShouldBeFound("name.specified=true");
+
+        // Get all the productsList where name is null
+        defaultProductsShouldNotBeFound("name.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllProductsByNameContainsSomething() throws Exception {
+        // Initialize the database
+        productsRepository.saveAndFlush(products);
+
+        // Get all the productsList where name contains DEFAULT_NAME
+        defaultProductsShouldBeFound("name.contains=" + DEFAULT_NAME);
+
+        // Get all the productsList where name contains UPDATED_NAME
+        defaultProductsShouldNotBeFound("name.contains=" + UPDATED_NAME);
+    }
+
+    @Test
+    @Transactional
+    void getAllProductsByNameNotContainsSomething() throws Exception {
+        // Initialize the database
+        productsRepository.saveAndFlush(products);
+
+        // Get all the productsList where name does not contain DEFAULT_NAME
+        defaultProductsShouldNotBeFound("name.doesNotContain=" + DEFAULT_NAME);
+
+        // Get all the productsList where name does not contain UPDATED_NAME
+        defaultProductsShouldBeFound("name.doesNotContain=" + UPDATED_NAME);
+    }
+
+    @Test
+    @Transactional
+    void getAllProductsByPriceIsEqualToSomething() throws Exception {
+        // Initialize the database
+        productsRepository.saveAndFlush(products);
+
+        // Get all the productsList where price equals to DEFAULT_PRICE
+        defaultProductsShouldBeFound("price.equals=" + DEFAULT_PRICE);
+
+        // Get all the productsList where price equals to UPDATED_PRICE
+        defaultProductsShouldNotBeFound("price.equals=" + UPDATED_PRICE);
+    }
+
+    @Test
+    @Transactional
+    void getAllProductsByPriceIsNotEqualToSomething() throws Exception {
+        // Initialize the database
+        productsRepository.saveAndFlush(products);
+
+        // Get all the productsList where price not equals to DEFAULT_PRICE
+        defaultProductsShouldNotBeFound("price.notEquals=" + DEFAULT_PRICE);
+
+        // Get all the productsList where price not equals to UPDATED_PRICE
+        defaultProductsShouldBeFound("price.notEquals=" + UPDATED_PRICE);
+    }
+
+    @Test
+    @Transactional
+    void getAllProductsByPriceIsInShouldWork() throws Exception {
+        // Initialize the database
+        productsRepository.saveAndFlush(products);
+
+        // Get all the productsList where price in DEFAULT_PRICE or UPDATED_PRICE
+        defaultProductsShouldBeFound("price.in=" + DEFAULT_PRICE + "," + UPDATED_PRICE);
+
+        // Get all the productsList where price equals to UPDATED_PRICE
+        defaultProductsShouldNotBeFound("price.in=" + UPDATED_PRICE);
+    }
+
+    @Test
+    @Transactional
+    void getAllProductsByPriceIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        productsRepository.saveAndFlush(products);
+
+        // Get all the productsList where price is not null
+        defaultProductsShouldBeFound("price.specified=true");
+
+        // Get all the productsList where price is null
+        defaultProductsShouldNotBeFound("price.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllProductsByPriceIsGreaterThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        productsRepository.saveAndFlush(products);
+
+        // Get all the productsList where price is greater than or equal to DEFAULT_PRICE
+        defaultProductsShouldBeFound("price.greaterThanOrEqual=" + DEFAULT_PRICE);
+
+        // Get all the productsList where price is greater than or equal to UPDATED_PRICE
+        defaultProductsShouldNotBeFound("price.greaterThanOrEqual=" + UPDATED_PRICE);
+    }
+
+    @Test
+    @Transactional
+    void getAllProductsByPriceIsLessThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        productsRepository.saveAndFlush(products);
+
+        // Get all the productsList where price is less than or equal to DEFAULT_PRICE
+        defaultProductsShouldBeFound("price.lessThanOrEqual=" + DEFAULT_PRICE);
+
+        // Get all the productsList where price is less than or equal to SMALLER_PRICE
+        defaultProductsShouldNotBeFound("price.lessThanOrEqual=" + SMALLER_PRICE);
+    }
+
+    @Test
+    @Transactional
+    void getAllProductsByPriceIsLessThanSomething() throws Exception {
+        // Initialize the database
+        productsRepository.saveAndFlush(products);
+
+        // Get all the productsList where price is less than DEFAULT_PRICE
+        defaultProductsShouldNotBeFound("price.lessThan=" + DEFAULT_PRICE);
+
+        // Get all the productsList where price is less than UPDATED_PRICE
+        defaultProductsShouldBeFound("price.lessThan=" + UPDATED_PRICE);
+    }
+
+    @Test
+    @Transactional
+    void getAllProductsByPriceIsGreaterThanSomething() throws Exception {
+        // Initialize the database
+        productsRepository.saveAndFlush(products);
+
+        // Get all the productsList where price is greater than DEFAULT_PRICE
+        defaultProductsShouldNotBeFound("price.greaterThan=" + DEFAULT_PRICE);
+
+        // Get all the productsList where price is greater than SMALLER_PRICE
+        defaultProductsShouldBeFound("price.greaterThan=" + SMALLER_PRICE);
+    }
+
+    @Test
+    @Transactional
+    void getAllProductsByQuantityIsEqualToSomething() throws Exception {
+        // Initialize the database
+        productsRepository.saveAndFlush(products);
+
+        // Get all the productsList where quantity equals to DEFAULT_QUANTITY
+        defaultProductsShouldBeFound("quantity.equals=" + DEFAULT_QUANTITY);
+
+        // Get all the productsList where quantity equals to UPDATED_QUANTITY
+        defaultProductsShouldNotBeFound("quantity.equals=" + UPDATED_QUANTITY);
+    }
+
+    @Test
+    @Transactional
+    void getAllProductsByQuantityIsNotEqualToSomething() throws Exception {
+        // Initialize the database
+        productsRepository.saveAndFlush(products);
+
+        // Get all the productsList where quantity not equals to DEFAULT_QUANTITY
+        defaultProductsShouldNotBeFound("quantity.notEquals=" + DEFAULT_QUANTITY);
+
+        // Get all the productsList where quantity not equals to UPDATED_QUANTITY
+        defaultProductsShouldBeFound("quantity.notEquals=" + UPDATED_QUANTITY);
+    }
+
+    @Test
+    @Transactional
+    void getAllProductsByQuantityIsInShouldWork() throws Exception {
+        // Initialize the database
+        productsRepository.saveAndFlush(products);
+
+        // Get all the productsList where quantity in DEFAULT_QUANTITY or UPDATED_QUANTITY
+        defaultProductsShouldBeFound("quantity.in=" + DEFAULT_QUANTITY + "," + UPDATED_QUANTITY);
+
+        // Get all the productsList where quantity equals to UPDATED_QUANTITY
+        defaultProductsShouldNotBeFound("quantity.in=" + UPDATED_QUANTITY);
+    }
+
+    @Test
+    @Transactional
+    void getAllProductsByQuantityIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        productsRepository.saveAndFlush(products);
+
+        // Get all the productsList where quantity is not null
+        defaultProductsShouldBeFound("quantity.specified=true");
+
+        // Get all the productsList where quantity is null
+        defaultProductsShouldNotBeFound("quantity.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllProductsByQuantityIsGreaterThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        productsRepository.saveAndFlush(products);
+
+        // Get all the productsList where quantity is greater than or equal to DEFAULT_QUANTITY
+        defaultProductsShouldBeFound("quantity.greaterThanOrEqual=" + DEFAULT_QUANTITY);
+
+        // Get all the productsList where quantity is greater than or equal to UPDATED_QUANTITY
+        defaultProductsShouldNotBeFound("quantity.greaterThanOrEqual=" + UPDATED_QUANTITY);
+    }
+
+    @Test
+    @Transactional
+    void getAllProductsByQuantityIsLessThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        productsRepository.saveAndFlush(products);
+
+        // Get all the productsList where quantity is less than or equal to DEFAULT_QUANTITY
+        defaultProductsShouldBeFound("quantity.lessThanOrEqual=" + DEFAULT_QUANTITY);
+
+        // Get all the productsList where quantity is less than or equal to SMALLER_QUANTITY
+        defaultProductsShouldNotBeFound("quantity.lessThanOrEqual=" + SMALLER_QUANTITY);
+    }
+
+    @Test
+    @Transactional
+    void getAllProductsByQuantityIsLessThanSomething() throws Exception {
+        // Initialize the database
+        productsRepository.saveAndFlush(products);
+
+        // Get all the productsList where quantity is less than DEFAULT_QUANTITY
+        defaultProductsShouldNotBeFound("quantity.lessThan=" + DEFAULT_QUANTITY);
+
+        // Get all the productsList where quantity is less than UPDATED_QUANTITY
+        defaultProductsShouldBeFound("quantity.lessThan=" + UPDATED_QUANTITY);
+    }
+
+    @Test
+    @Transactional
+    void getAllProductsByQuantityIsGreaterThanSomething() throws Exception {
+        // Initialize the database
+        productsRepository.saveAndFlush(products);
+
+        // Get all the productsList where quantity is greater than DEFAULT_QUANTITY
+        defaultProductsShouldNotBeFound("quantity.greaterThan=" + DEFAULT_QUANTITY);
+
+        // Get all the productsList where quantity is greater than SMALLER_QUANTITY
+        defaultProductsShouldBeFound("quantity.greaterThan=" + SMALLER_QUANTITY);
+    }
+
+    @Test
+    @Transactional
+    void getAllProductsByCreatedDateIsEqualToSomething() throws Exception {
+        // Initialize the database
+        productsRepository.saveAndFlush(products);
+
+        // Get all the productsList where createdDate equals to DEFAULT_CREATED_DATE
+        defaultProductsShouldBeFound("createdDate.equals=" + DEFAULT_CREATED_DATE);
+
+        // Get all the productsList where createdDate equals to UPDATED_CREATED_DATE
+        defaultProductsShouldNotBeFound("createdDate.equals=" + UPDATED_CREATED_DATE);
+    }
+
+    @Test
+    @Transactional
+    void getAllProductsByCreatedDateIsNotEqualToSomething() throws Exception {
+        // Initialize the database
+        productsRepository.saveAndFlush(products);
+
+        // Get all the productsList where createdDate not equals to DEFAULT_CREATED_DATE
+        defaultProductsShouldNotBeFound("createdDate.notEquals=" + DEFAULT_CREATED_DATE);
+
+        // Get all the productsList where createdDate not equals to UPDATED_CREATED_DATE
+        defaultProductsShouldBeFound("createdDate.notEquals=" + UPDATED_CREATED_DATE);
+    }
+
+    @Test
+    @Transactional
+    void getAllProductsByCreatedDateIsInShouldWork() throws Exception {
+        // Initialize the database
+        productsRepository.saveAndFlush(products);
+
+        // Get all the productsList where createdDate in DEFAULT_CREATED_DATE or UPDATED_CREATED_DATE
+        defaultProductsShouldBeFound("createdDate.in=" + DEFAULT_CREATED_DATE + "," + UPDATED_CREATED_DATE);
+
+        // Get all the productsList where createdDate equals to UPDATED_CREATED_DATE
+        defaultProductsShouldNotBeFound("createdDate.in=" + UPDATED_CREATED_DATE);
+    }
+
+    @Test
+    @Transactional
+    void getAllProductsByCreatedDateIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        productsRepository.saveAndFlush(products);
+
+        // Get all the productsList where createdDate is not null
+        defaultProductsShouldBeFound("createdDate.specified=true");
+
+        // Get all the productsList where createdDate is null
+        defaultProductsShouldNotBeFound("createdDate.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllProductsByCreatedDateIsGreaterThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        productsRepository.saveAndFlush(products);
+
+        // Get all the productsList where createdDate is greater than or equal to DEFAULT_CREATED_DATE
+        defaultProductsShouldBeFound("createdDate.greaterThanOrEqual=" + DEFAULT_CREATED_DATE);
+
+        // Get all the productsList where createdDate is greater than or equal to UPDATED_CREATED_DATE
+        defaultProductsShouldNotBeFound("createdDate.greaterThanOrEqual=" + UPDATED_CREATED_DATE);
+    }
+
+    @Test
+    @Transactional
+    void getAllProductsByCreatedDateIsLessThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        productsRepository.saveAndFlush(products);
+
+        // Get all the productsList where createdDate is less than or equal to DEFAULT_CREATED_DATE
+        defaultProductsShouldBeFound("createdDate.lessThanOrEqual=" + DEFAULT_CREATED_DATE);
+
+        // Get all the productsList where createdDate is less than or equal to SMALLER_CREATED_DATE
+        defaultProductsShouldNotBeFound("createdDate.lessThanOrEqual=" + SMALLER_CREATED_DATE);
+    }
+
+    @Test
+    @Transactional
+    void getAllProductsByCreatedDateIsLessThanSomething() throws Exception {
+        // Initialize the database
+        productsRepository.saveAndFlush(products);
+
+        // Get all the productsList where createdDate is less than DEFAULT_CREATED_DATE
+        defaultProductsShouldNotBeFound("createdDate.lessThan=" + DEFAULT_CREATED_DATE);
+
+        // Get all the productsList where createdDate is less than UPDATED_CREATED_DATE
+        defaultProductsShouldBeFound("createdDate.lessThan=" + UPDATED_CREATED_DATE);
+    }
+
+    @Test
+    @Transactional
+    void getAllProductsByCreatedDateIsGreaterThanSomething() throws Exception {
+        // Initialize the database
+        productsRepository.saveAndFlush(products);
+
+        // Get all the productsList where createdDate is greater than DEFAULT_CREATED_DATE
+        defaultProductsShouldNotBeFound("createdDate.greaterThan=" + DEFAULT_CREATED_DATE);
+
+        // Get all the productsList where createdDate is greater than SMALLER_CREATED_DATE
+        defaultProductsShouldBeFound("createdDate.greaterThan=" + SMALLER_CREATED_DATE);
+    }
+
+    @Test
+    @Transactional
+    void getAllProductsByUpdatedDateIsEqualToSomething() throws Exception {
+        // Initialize the database
+        productsRepository.saveAndFlush(products);
+
+        // Get all the productsList where updatedDate equals to DEFAULT_UPDATED_DATE
+        defaultProductsShouldBeFound("updatedDate.equals=" + DEFAULT_UPDATED_DATE);
+
+        // Get all the productsList where updatedDate equals to UPDATED_UPDATED_DATE
+        defaultProductsShouldNotBeFound("updatedDate.equals=" + UPDATED_UPDATED_DATE);
+    }
+
+    @Test
+    @Transactional
+    void getAllProductsByUpdatedDateIsNotEqualToSomething() throws Exception {
+        // Initialize the database
+        productsRepository.saveAndFlush(products);
+
+        // Get all the productsList where updatedDate not equals to DEFAULT_UPDATED_DATE
+        defaultProductsShouldNotBeFound("updatedDate.notEquals=" + DEFAULT_UPDATED_DATE);
+
+        // Get all the productsList where updatedDate not equals to UPDATED_UPDATED_DATE
+        defaultProductsShouldBeFound("updatedDate.notEquals=" + UPDATED_UPDATED_DATE);
+    }
+
+    @Test
+    @Transactional
+    void getAllProductsByUpdatedDateIsInShouldWork() throws Exception {
+        // Initialize the database
+        productsRepository.saveAndFlush(products);
+
+        // Get all the productsList where updatedDate in DEFAULT_UPDATED_DATE or UPDATED_UPDATED_DATE
+        defaultProductsShouldBeFound("updatedDate.in=" + DEFAULT_UPDATED_DATE + "," + UPDATED_UPDATED_DATE);
+
+        // Get all the productsList where updatedDate equals to UPDATED_UPDATED_DATE
+        defaultProductsShouldNotBeFound("updatedDate.in=" + UPDATED_UPDATED_DATE);
+    }
+
+    @Test
+    @Transactional
+    void getAllProductsByUpdatedDateIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        productsRepository.saveAndFlush(products);
+
+        // Get all the productsList where updatedDate is not null
+        defaultProductsShouldBeFound("updatedDate.specified=true");
+
+        // Get all the productsList where updatedDate is null
+        defaultProductsShouldNotBeFound("updatedDate.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllProductsByUpdatedDateIsGreaterThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        productsRepository.saveAndFlush(products);
+
+        // Get all the productsList where updatedDate is greater than or equal to DEFAULT_UPDATED_DATE
+        defaultProductsShouldBeFound("updatedDate.greaterThanOrEqual=" + DEFAULT_UPDATED_DATE);
+
+        // Get all the productsList where updatedDate is greater than or equal to UPDATED_UPDATED_DATE
+        defaultProductsShouldNotBeFound("updatedDate.greaterThanOrEqual=" + UPDATED_UPDATED_DATE);
+    }
+
+    @Test
+    @Transactional
+    void getAllProductsByUpdatedDateIsLessThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        productsRepository.saveAndFlush(products);
+
+        // Get all the productsList where updatedDate is less than or equal to DEFAULT_UPDATED_DATE
+        defaultProductsShouldBeFound("updatedDate.lessThanOrEqual=" + DEFAULT_UPDATED_DATE);
+
+        // Get all the productsList where updatedDate is less than or equal to SMALLER_UPDATED_DATE
+        defaultProductsShouldNotBeFound("updatedDate.lessThanOrEqual=" + SMALLER_UPDATED_DATE);
+    }
+
+    @Test
+    @Transactional
+    void getAllProductsByUpdatedDateIsLessThanSomething() throws Exception {
+        // Initialize the database
+        productsRepository.saveAndFlush(products);
+
+        // Get all the productsList where updatedDate is less than DEFAULT_UPDATED_DATE
+        defaultProductsShouldNotBeFound("updatedDate.lessThan=" + DEFAULT_UPDATED_DATE);
+
+        // Get all the productsList where updatedDate is less than UPDATED_UPDATED_DATE
+        defaultProductsShouldBeFound("updatedDate.lessThan=" + UPDATED_UPDATED_DATE);
+    }
+
+    @Test
+    @Transactional
+    void getAllProductsByUpdatedDateIsGreaterThanSomething() throws Exception {
+        // Initialize the database
+        productsRepository.saveAndFlush(products);
+
+        // Get all the productsList where updatedDate is greater than DEFAULT_UPDATED_DATE
+        defaultProductsShouldNotBeFound("updatedDate.greaterThan=" + DEFAULT_UPDATED_DATE);
+
+        // Get all the productsList where updatedDate is greater than SMALLER_UPDATED_DATE
+        defaultProductsShouldBeFound("updatedDate.greaterThan=" + SMALLER_UPDATED_DATE);
+    }
+
+    @Test
+    @Transactional
+    void getAllProductsByCategoryIsEqualToSomething() throws Exception {
+        // Initialize the database
+        productsRepository.saveAndFlush(products);
+        Category category;
+        if (TestUtil.findAll(em, Category.class).isEmpty()) {
+            category = CategoryResourceIT.createEntity(em);
+            em.persist(category);
+            em.flush();
+        } else {
+            category = TestUtil.findAll(em, Category.class).get(0);
+        }
+        em.persist(category);
+        em.flush();
+        products.setCategory(category);
+        productsRepository.saveAndFlush(products);
+        Long categoryId = category.getId();
+
+        // Get all the productsList where category equals to categoryId
+        defaultProductsShouldBeFound("categoryId.equals=" + categoryId);
+
+        // Get all the productsList where category equals to (categoryId + 1)
+        defaultProductsShouldNotBeFound("categoryId.equals=" + (categoryId + 1));
+    }
+
+    /**
+     * Executes the search, and checks that the default entity is returned.
+     */
+    private void defaultProductsShouldBeFound(String filter) throws Exception {
+        restProductsMockMvc
+            .perform(get(ENTITY_API_URL + "?sort=id,desc&" + filter))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$.[*].id").value(hasItem(products.getId().intValue())))
+            .andExpect(jsonPath("$.[*].name").value(hasItem(DEFAULT_NAME)))
+            .andExpect(jsonPath("$.[*].price").value(hasItem(DEFAULT_PRICE)))
+            .andExpect(jsonPath("$.[*].quantity").value(hasItem(DEFAULT_QUANTITY)))
+            .andExpect(jsonPath("$.[*].imageURLContentType").value(hasItem(DEFAULT_IMAGE_URL_CONTENT_TYPE)))
+            .andExpect(jsonPath("$.[*].imageURL").value(hasItem(Base64Utils.encodeToString(DEFAULT_IMAGE_URL))))
+            .andExpect(jsonPath("$.[*].createdDate").value(hasItem(sameInstant(DEFAULT_CREATED_DATE))))
+            .andExpect(jsonPath("$.[*].updatedDate").value(hasItem(sameInstant(DEFAULT_UPDATED_DATE))));
+
+        // Check, that the count call also returns 1
+        restProductsMockMvc
+            .perform(get(ENTITY_API_URL + "/count?sort=id,desc&" + filter))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(content().string("1"));
+    }
+
+    /**
+     * Executes the search, and checks that the default entity is not returned.
+     */
+    private void defaultProductsShouldNotBeFound(String filter) throws Exception {
+        restProductsMockMvc
+            .perform(get(ENTITY_API_URL + "?sort=id,desc&" + filter))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$").isEmpty());
+
+        // Check, that the count call also returns 0
+        restProductsMockMvc
+            .perform(get(ENTITY_API_URL + "/count?sort=id,desc&" + filter))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(content().string("0"));
     }
 
     @Test

@@ -1,7 +1,9 @@
 package com.demo.web.rest;
 
 import com.demo.repository.JobsRepository;
+import com.demo.service.JobsQueryService;
 import com.demo.service.JobsService;
+import com.demo.service.criteria.JobsCriteria;
 import com.demo.service.dto.JobsDTO;
 import com.demo.web.rest.errors.BadRequestAlertException;
 import java.net.URI;
@@ -17,7 +19,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -43,9 +44,12 @@ public class JobsResource {
 
     private final JobsRepository jobsRepository;
 
-    public JobsResource(JobsService jobsService, JobsRepository jobsRepository) {
+    private final JobsQueryService jobsQueryService;
+
+    public JobsResource(JobsService jobsService, JobsRepository jobsRepository, JobsQueryService jobsQueryService) {
         this.jobsService = jobsService;
         this.jobsRepository = jobsRepository;
+        this.jobsQueryService = jobsQueryService;
     }
 
     /**
@@ -142,14 +146,30 @@ public class JobsResource {
      * {@code GET  /jobs} : get all the jobs.
      *
      * @param pageable the pagination information.
+     * @param criteria the criteria which the requested entities should match.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of jobs in body.
      */
     @GetMapping("/jobs")
-    public ResponseEntity<List<JobsDTO>> getAllJobs(@org.springdoc.api.annotations.ParameterObject Pageable pageable) {
-        log.debug("REST request to get a page of Jobs");
-        Page<JobsDTO> page = jobsService.findAll(pageable);
+    public ResponseEntity<List<JobsDTO>> getAllJobs(
+        JobsCriteria criteria,
+        @org.springdoc.api.annotations.ParameterObject Pageable pageable
+    ) {
+        log.debug("REST request to get Jobs by criteria: {}", criteria);
+        Page<JobsDTO> page = jobsQueryService.findByCriteria(criteria, pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
+    }
+
+    /**
+     * {@code GET  /jobs/count} : count all the jobs.
+     *
+     * @param criteria the criteria which the requested entities should match.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the count in body.
+     */
+    @GetMapping("/jobs/count")
+    public ResponseEntity<Long> countJobs(JobsCriteria criteria) {
+        log.debug("REST request to count Jobs by criteria: {}", criteria);
+        return ResponseEntity.ok().body(jobsQueryService.countByCriteria(criteria));
     }
 
     /**

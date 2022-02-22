@@ -50,7 +50,7 @@
     }
   ],
   "fluentMethods": true,
-  "jpaMetamodelFiltering": false,
+  "jpaMetamodelFiltering": true,
   "name": "Jobs",
   "pagination": "pagination",
   "readOnly": false,

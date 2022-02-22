@@ -1,7 +1,9 @@
 package com.demo.web.rest;
 
 import com.demo.repository.ProductsRepository;
+import com.demo.service.ProductsQueryService;
 import com.demo.service.ProductsService;
+import com.demo.service.criteria.ProductsCriteria;
 import com.demo.service.dto.ProductsDTO;
 import com.demo.web.rest.errors.BadRequestAlertException;
 import java.net.URI;
@@ -17,7 +19,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -43,9 +44,16 @@ public class ProductsResource {
 
     private final ProductsRepository productsRepository;
 
-    public ProductsResource(ProductsService productsService, ProductsRepository productsRepository) {
+    private final ProductsQueryService productsQueryService;
+
+    public ProductsResource(
+        ProductsService productsService,
+        ProductsRepository productsRepository,
+        ProductsQueryService productsQueryService
+    ) {
         this.productsService = productsService;
         this.productsRepository = productsRepository;
+        this.productsQueryService = productsQueryService;
     }
 
     /**
@@ -142,14 +150,30 @@ public class ProductsResource {
      * {@code GET  /products} : get all the products.
      *
      * @param pageable the pagination information.
+     * @param criteria the criteria which the requested entities should match.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of products in body.
      */
     @GetMapping("/products")
-    public ResponseEntity<List<ProductsDTO>> getAllProducts(@org.springdoc.api.annotations.ParameterObject Pageable pageable) {
-        log.debug("REST request to get a page of Products");
-        Page<ProductsDTO> page = productsService.findAll(pageable);
+    public ResponseEntity<List<ProductsDTO>> getAllProducts(
+        ProductsCriteria criteria,
+        @org.springdoc.api.annotations.ParameterObject Pageable pageable
+    ) {
+        log.debug("REST request to get Products by criteria: {}", criteria);
+        Page<ProductsDTO> page = productsQueryService.findByCriteria(criteria, pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
+    }
+
+    /**
+     * {@code GET  /products/count} : count all the products.
+     *
+     * @param criteria the criteria which the requested entities should match.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the count in body.
+     */
+    @GetMapping("/products/count")
+    public ResponseEntity<Long> countProducts(ProductsCriteria criteria) {
+        log.debug("REST request to count Products by criteria: {}", criteria);
+        return ResponseEntity.ok().body(productsQueryService.countByCriteria(criteria));
     }
 
     /**
